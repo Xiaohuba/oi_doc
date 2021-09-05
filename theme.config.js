@@ -1,6 +1,6 @@
 export default {
-  github: 'https://github.com/shuding/nextra',
-  docsRepositoryBase: 'https://github.com/shuding/nextra/blob/master',
+  github: 'https://github.com/Xiaohuba/oi_doc',
+  docsRepositoryBase: 'https://github.com/Xiaohuba/oi_doc/blob/main/pages/',
   titleSuffix: ' – 林老师的编程课堂',
   logo: (
     <>
