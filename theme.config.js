@@ -4,9 +4,9 @@ export default {
   titleSuffix: ' – 林老师的编程课堂',
   logo: (
     <>
-      <span className="mr-2 font-extrabold hidden md:inline">Nextra</span>
+      <span className="mr-2 font-extrabold hidden md:inline">CSP必胜宝典</span>
       <span className="text-gray-600 font-normal hidden md:inline">
-        CSP必胜宝典
+        Powered By Nextra
       </span>
     </>
   ),
@@ -62,6 +62,6 @@ export default {
   nextLinks: true,
   footer: true,
   footerEditLink: '作出贡献',
-  footerText: <>MIT {new Date().getFullYear()} © 林老师.</>,
+  footerText: <>Apache 2.0 {new Date().getFullYear()} © 林老师.</>,
   unstable_faviconGlyph: '👋',
 }
