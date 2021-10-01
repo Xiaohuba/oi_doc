@@ -1,3 +1,4 @@
+# 仿函数
 ## Part1: 仿函数是什么？
 
 ~~众所周知~~，STL里有一个玩意儿叫 ```greater``` 。
@@ -20,6 +21,7 @@ sort(vec.begin(),vec.end(),cmp);
 
 那么既然是类，那么```()```的作用就说得通了：这是类的初始化，初始化完就和```cmp```等价。
 
+在正常的地方，调用仿函数的格式为```func(/*类初始化*/)(参数)```，例如```greater<int>()(1,2)```
 ## Part2: 怎么写仿函数？
 可一个类，怎么能当函数耍呢？
 
@@ -55,7 +57,7 @@ type operator() (type a, type b, type c)
 
 没错，这样就能当函数耍了！
 
-举个????：
+举个栗子：
 ```cpp
 #include<bits/stdc++.h>
 using namespace std;
@@ -81,7 +83,6 @@ int main(){
 9
 
 ## Part3: 仿函数有什么用？
-部分来自于[CSDN](https://blog.csdn.net/coolwriter/article/details/81533226)。
 
 STL里面有一个东西叫做```count_if```。
 我们用正常的方式自定义函数来统计一串数中大于5的数的个数:
@@ -145,6 +146,12 @@ int main(){
 [学生去重](https://www.luogu.com.cn/problem/U181522)
 我们可以使用仿函数来作为比较函数。
 ```cpp
+struct stu//学生
+{
+    string name;
+    int a,b,c,d;
+}student[100001];
+
 class my_less
 {
 public:
@@ -171,3 +178,81 @@ public:
         cout<<student[i].name<<' '<<student[i].a<<' '<<student[i].b<<' '<<student[i].c<<' '<<student[i].d<<endl;
     }
 ```
+
+## Part5: 配接
+话说lls整天没事干，于是把统计学生的题目改了一下：统计分数之和大于等于m的学生数量，怎么办？
+
+我们当然可以像统计大于n的数的个数一样，写成```check(m)```的形式，但如果我们不想这么干呢？
+
+第一件想到的事情就是用仿函数```greater<stu>```
+
+但是```count_if```只接受带一个参数的函数，怎么办？
+那就把第二个参数绑定成一个特定的值呗：
+```cpp
+//学生结构体定义略
+bool operator> (stu a, stu b)
+{
+    return a.a+a.b+a.c+a.d>b.a+b.b+b.c+b.d;
+}
+int main(){
+    cin>>n>>m;
+    stu cmp=(stu){"nil",m,0,0,0};//总分刚好为m的学生
+    for(int i=0; i<n; i++) 
+    {
+        string x;
+        int a,b,c,d;
+        cin>>x>>a>>b>>c>>d;
+        student[i]=(stu){x,a,b,c,d};
+    }
+    cout<<count_if(student,student+n,bind2nd(greater<stu>(),cmp));//每次调用相当于greater<stu>()(_数组中的值_,cmp)
+    return 0;
+}
+```
+
+类似的函数有四个：(仿函数名```op```，固定值```value```，数组中的值```x```）
+
+```bind1st(op(),value```: 相当于调用```op()(value,x)```
+
+```bind2nd(op(),value```: 相当于调用```op()(x,value)```
+
+```not1(op())```: 相当于调用```!op(x)```
+
+```not2(op())```: 相当于调用```!op(x_1, x_2)```
+
+栗子：
+```cpp
+#include<bits/stdc++.h>
+#define ll long long 
+using namespace std;
+int n,m;
+struct stu
+{
+    string name;
+    int a,b,c,d;
+}student[100001];
+
+bool operator> (stu a, stu b)
+{
+    return a.a+a.b+a.c+a.d>b.a+b.b+b.c+b.d;
+}
+
+int main(){
+    cin>>n;
+    stu cmp=(stu){"nil",m,0,0,0};
+    for(int i=0; i<n; i++) 
+    {
+        string x;
+        int a,b,c,d;
+        cin>>x>>a>>b>>c>>d;
+        student[i]=(stu){x,a,b,c,d};
+    }
+    sort(student,student+n,not2(greater<stu>()));//按非升序排列（也就是greater<stu>取反）
+    for(int i=0; i<n; i++)
+    {
+        cout<<student[i].name<<' '<<student[i].a<<' '<<student[i].b<<' '<<student[i].c<<' '<<student[i].d<<endl;
+    }
+    return 0;
+}
+```
+## Part6: 参考文献
+[CSDN](https://blog.csdn.net/coolwriter/article/details/81533226)
