@@ -1,0 +1,204 @@
+# 图论：从橙色到黑色
+## 1.存图
+### 1.1 邻接矩阵
+记 $f[i][j]$ 为 $i$ 到 $j$ 的有向边的边权（无向边建两次）。
+
+时间：$O(n^2)$  空间： $O(n^2)$
+
+优点：
+
+- 容易理解
+- 简单明了
+
+缺点：
+
+- 炸时间，炸空间
+- 无法处理重边
+
+### 1.2 邻接表（ low版 ）
+
+既然无法处理重边，那么我们就给数组**改进一下**！
+
+记 $f[i][k]$ 为 $i$ 出发的第 $k$ 条有向边的边权（无向边建两次），$num[i]$ 表示从 $i$ 出发的有向边的数量。
+
+时间：$O(m)$  空间： $O(n^2)$
+
+优点：
+- 可以处理重边
+
+缺点：
+
+- 炸空间
+
+### 1.3 邻接表（ vector ）
+
+可以发现，刚才的数组中有很多空间是浪费的，原因是我们不知道数组要开多大。
+
+那么，我们就可以用 ```vector```——可变数组来节省空间。
+
+```cpp
+struct edge{
+	int v,w;
+};
+vector<edge> g[MAXN];
+
+void add(int u, int v, int w)
+{
+	g[u].push_back((edge){v,w});
+}
+```
+
+$g[u][i]$ 表示从 $u$ 出发的第 $i$ 条边， $v$ 表示这条边的终点， $w$ 表示这条边的边权。
+
+遍历时便可以直接```for(int i=0; i<g[u].size(); i++) {edge e=g[u][i]; /*do something*/}```。
+
+优点：
+- 可以处理重边
+- 易于编写
+- 遍历方便
+
+缺点：
+
+- 不开 O2 时常数太大
+
+### 1.4 邻接表（链式前向星）
+
+```cpp
+struct edge{
+	int u,v,w,nxt;
+};
+edge e[MAXE];
+int cnt=0,head[MAXN];
+void add(int u, int v, int w)
+{
+	e[++cnt]=(edge){u,v,w,head[u]};
+    head[u]=cnt;
+}
+```
+$head[u]$ 表示从 $u$ 出发的最后一条边， $u$ 表示这条边的起点， $v$ 表示这条边的终点， $w$ 表示这条边的边权， $nxt$ 表示这个点出发的下一条边。
+
+遍历时便可以直接```for(int i=head[u]; i; i=e[i].next) {edge ed=e[i]; /*do something*/}```。
+
+优点：
+- 可以处理重边
+- 手写常数小
+- 遍历方便
+
+缺点：
+
+- 码量较大
+
+## 2.__短路问题
+### 2.0 写在前头
+> 由于```Dijkstra```在比赛中实在太常用了，而且基本不会被卡，所以下面的代码都用这一种算法，并且用1.3的方式存图。
+### 2.1 最短路
+
+非常基础，所以不做过多说明。思想是贪心。
+
+算法：Dijkstra
+
+定义：
+```cpp
+struct point{
+	int x;
+	int step;
+	bool operator< (const point & rhs) const
+	{
+		return rhs.step<step;
+	}
+};
+priority_queue<point> pq;
+int vis[50001];
+int dis[50001];
+```
+核心代码：
+```cpp
+int dijkstra(int st, int ed)
+{
+	memset(dis,0x7f,sizeof(dis));
+    memset(vis,0,sizeof(vis));
+	pq.push((point){
+		st,0
+	});
+	dis[st]=0;
+	while(!pq.empty())
+	{
+		point u=pq.top();pq.pop();
+		if(vis[u.x]) continue;
+		vis[u.x]=1;
+		for(int i=0; i<g[u.x].size(); i++)
+		{
+			int v=g[u.x][i].v;
+			if(dis[v]>dis[u.x]+g[u.x][i].w)
+			{
+				dis[v]=dis[u.x]+g[u.x][i].w;
+				pq.push((point){
+					v,dis[v]
+				});
+                        
+			}
+		}
+	}
+	return dis[ed];
+}
+```
+
+### 2.1 次短路
+在最短路的基础上，想到把 $dis$ 数组多开一维，用 $dis[i][1]$ 表示到 $i$ 这个点的最短路，用 $dis[i][2]$ 表示到 $i$ 这个点的次短路。
+
+定义：
+```cpp
+struct point{
+	int x;
+	int step;
+	bool operator< (const point & rhs) const
+	{
+		return rhs.step<step;
+	}
+};
+priority_queue<point> pq;
+int vis[50001];
+int dis[50001][3];
+```
+代码：
+```cpp
+int dijkstra_2th(int st, int ed)
+{
+	pq.push((point){
+		st,0
+	});
+	dis[st][1]=0;
+	while(!pq.empty())
+	{
+		point u=pq.top();pq.pop();
+		
+		vis[u.x]=1;
+		for(int i=0; i<g[u.x].size(); i++)
+		{
+			int v=g[u.x][i].v;
+            bool flg=0;
+			if(u.step+g[u.x][i].w<dis[v][1])
+			{
+				dis[v][2]=dis[v][1];
+				dis[v][1]=u.step+g[u.x][i].w;
+				flg=1;
+			}
+			if(u.step+g[u.x][i].w>dis[v][1] && u.step+g[u.x][i].w<dis[v][2])
+			{
+				dis[v][2]=u.step+g[u.x][i].w;
+				flg=1;
+			}
+			if(dis[u.x][2]+g[u.x][i].w<dis[v][2])
+			{
+				dis[v][2]=dis[u.x][2]+g[u.x][i].w;
+				flg=1;
+			}
+			if(flg)
+			{
+				pq.push((point){v,dis[v][1]});
+			}
+		}
+	}
+	return dis[ed][2];
+}
+```
