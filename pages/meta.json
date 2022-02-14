@@ -1,8 +1,5 @@
 {
   "index": "简介",
-  "computer": "计算机组成原理",
-  "algorithm": "算法",
-  "common": "常识",
-  "skills": "解题",
-  "code": "复赛"
+  "exam": "初赛",
+  "code": "复赛",
 }
