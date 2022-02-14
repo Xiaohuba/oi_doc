@@ -2,5 +2,5 @@
   "dp": "动态规划",
   "functor": "仿函数",
   "graph": "图论",
-  "segtree": "线段树",
+  "segtree": "线段树"
 }
