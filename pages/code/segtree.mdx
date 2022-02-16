@@ -185,6 +185,275 @@ int query(int p,int l,int r)//区间查询 当前节点编号为p 要查询的�
 
 
 # 5.线段树的经典应用
-暂时咕了，理解一下spoon
+## 5.1 逆序对计数 
+### 5.1.0 前言 
+[题目传送门](https://www.luogu.com.cn/problem/P1908)  在我们刚学 OI 时就遇见过这个问题，它的时间复杂度要求是$O(n \log n)$ ，那时，我们利用归并排序的特性轻易地解决了了它，但由于归并排序的应用范围过于狭隘，现在，利用线段树来解决它反而成了对于每个看到这里的 OIer 最自然的想法。
 
-QAQ
+### 5.1.1 分析 
+这个思路乍一看很难，但只要认真思考，对上文的理解深刻，还是能够自己想出来的。  
+
+我们先思考逆序对的形成缘由，**有一个比你大的数比你先出现，那么你和他构成了一个逆序对，对于每个数，我们只要求出当前已经出现的数里有几个比他大即可**。  
+
+反复阅读这句话，你想到了什么？  
+
+> 桶。~~（意识流做题）~~
+
+桶这个东西可以将大小关系转化成位置关系，这样一来，值为 val 的元素出现时，他对答案的贡献就是他后面所有桶里的数字之和。 
+
+看到这里有个区间求和。  
+
+> 线段树。  
+ 
+~~这时你说：“这道题 ai 最多有 10^9 ，内存直接炸飞啊”~~  
+
+看到重点部分的这个字眼“比我大”，想到了什么？  
+
+> 离散化。  
+ 
+而对于每个数的出现，只需要在桶中对应点加 1 即可。  
+
+综上，我们只需要写一颗支持单点修改和区间查询的线段树即可。 
+
+~~你要写树状数组我也不拦着你~~  
+
+### 5.1.2 代码：
+```cpp
+#include<bits/stdc++.h>
+const int N=5e5+5;
+#define lc p<<1
+#define rc p<<1|1
+#define ll long long 
+ll ans;
+struct disc{
+	int val,id;
+	bool operator <(const disc rhs)const
+	{
+		return this->val<rhs.val;
+	}
+}a[N];//离散化 
+int n,b[N];
+struct point{
+	int l,r;
+	ll v;
+}tree[N<<2];
+void pushUp(int p)
+{
+	tree[p].v=tree[lc].v+tree[rc].v;
+}
+void build(int p,int l,int r)
+{
+	tree[p].l=l,tree[p].r=r,tree[p].v=0;
+	if(l==r)return ;//最开始没有数出现，建的是空树。 
+	int mid=(l+r)>>1;
+	build(lc,l,mid);
+	build(rc,mid+1,r);
+	pushUp(p); 
+}
+void modify(int p,int k)
+{
+	if(tree[p].l==k&&tree[p].r==k)
+	{
+		++tree[p].v;
+		return ;
+	}
+	if(tree[lc].r>=k) modify(lc,k);
+	if(tree[rc].l<=k) modify(rc,k);
+	pushUp(p);
+}//简单的单点修改 
+ll query(int p,int l,int r) 
+{
+	if(tree[p].l>r)return 0;
+	if(tree[p].r<l)return 0;
+	if(tree[p].l>=l&&tree[p].r<=r)return tree[p].v;
+	ll Tmp=0;
+	if(l<=tree[lc].r)Tmp+=query(lc,l,r); 
+	if(r>tree[lc].r)Tmp+=query(rc,l,r);
+	return Tmp;
+}//简单的区间查询 
+int main()
+{
+	scanf("%d",&n);
+	for(int i=1;i<=n;i++)
+	{
+		scanf("%d",&a[i].val);
+		a[i].id=i;
+	}
+	std::sort(a+1,a+n+1);
+	int rank=0;a[0].val=1e9+1;
+	for(int i=1;i<=n;i++)b[a[i].id]=(rank+=(a[i].val!=a[i-1].val));//离散化 当然你也可以用STL三连 
+	build(1,1,n);
+	for(int i=1;i<=n;i++)
+	{
+		modify(1,b[i]);
+		ans+=query(1,b[i]+1,rank);	
+	}//参考分析食用 
+	printf("%lld",ans);
+	return 0;
+}
+```
+### 5.1.2 后记 
+当然，这种用线段树维护桶的想法也叫权值线段树，我一般叫它树桶，它是一种非常灵活的思想，因为他可以做到删点和加点，你可以用它 AC 普通平衡树模板。
+
+~~不过在这题里面因为离散化跑得比归并慢……~~
+## 5.2 扫描线
+### 5.2.0 前言
+扫描线是一种高效的求解矩形面积/周长并的算法，可以利用线段树来提速。
+
+具体地说，就是用线段树上的一个节点对应一段线段，并将矩形分割求解。
+### 5.2.1 分析
+~~咕咕咕~~
+### 5.2.2 代码
+```cpp
+/*
+* @ Author: Xiaohuba
+* @ Usage: Luogu Problem
+* @ Language: C++
+*/
+#include<bits/stdc++.h>
+using namespace std;
+
+/* ---File Head Begin--- */
+namespace Xiaohuba_File_Head
+{
+//def
+#define ll long long
+#define lll __int128
+#define pii pair<int,int>
+#define mkp make_pair
+#define vi vector<int>
+#define vs vector<string>
+#define viit vector<int>::iterator
+#define pb push_back
+#define il inline 
+#define pch putchar
+#define gch getchar
+#define Endl putchar('\n')
+#define Space putchar(' ')
+#define For(x,st,ed) for(int x=st,END=ed;x<=END;++x)
+#define ForDown(x,st,ed) for(int x=st,END=ed;x>=END;--x)
+#define sq(x) (x*x)
+#define Set(a,b) memset(a,b,sizeof(a))
+#define Cpy(a,b) memcpy(a,b,sizeof(a))
+#define MOD 100000007ll
+//io
+template <typename T>
+il void read(T & tmp){ tmp=0;char c=getchar();bool flg=0;while(!isdigit(c)) flg=c=='-',c=getchar();while(isdigit(c)) tmp=(tmp<<3)+(tmp<<1)+c-'0',c=getchar();if(flg) tmp*=-1; }
+template <typename T, typename... Args>
+il void read(T &tmp, Args &...tmps){ read(tmp);read(tmps...); }
+template <typename T>
+il void __write(const T &x){ if(x==0) return;__write(x/10);putchar(x%10+'0'); }
+template <typename T>
+il void write(const T &x){ if(x==0) putchar('0');if(x<0) putchar('-');__write((x<0 ? -x : x)); }
+template <typename T>
+il void write_with_space(const T &x){ write(x);Space; }
+template <typename T>
+il void write_with_endl(const T &x){ write(x);Endl; }
+template <typename T, typename... Args>
+il void write(const T &x, const Args &...y){ write_with_space(x);write_with_space(y...); }
+il void __getline(istream & istr, string & str){ getline(istr,str);if(*(str.end()-1)=='\r') str.erase(str.end()-1); } 
+#define getline __getline
+};
+using namespace Xiaohuba_File_Head;
+/* ---File Head End--- */
+
+/* ---Pbds Operations Begin--- */
+#ifdef ONLINE_JUDGE
+#include<bits/extc++.h>
+using namespace __gnu_pbds;
+using namespace __gnu_cxx;
+namespace Xiaohuba_Pbds
+{
+#define Hash gp_hash_table
+#define Rbt tree<pii,null_type,less<pii>,rb_tree_tag,tree_order_statistics_node_update>
+#define Rank(tr,k) tr.order_of_key(pii(k,0)+1)
+#define Kth(tr,k) tr.find_by_order(k-1)->first
+#define Pre(tr,k) tr.find_by_order(tr.order_of_key(pii(k,0))-1)->first
+#define Nxt(tr,k) tr.find_by_order(tr.order_of_key(pii(k,cnt[k]-1))+(tr.find(pii(k,0))==tr.end() ? 0 : 1))->first
+#define Trie trie<string,null_type,trie_string_access_traits<>,pat_trie_tag,trie_prefix_search_node_update>
+#define ForT(tr,it) pair<Trie::iterator,Trie::iterator> range=tr.prefix_range(x);for(Trie::iterator it=range.first; it!=range.second; ++it)
+#define PQueue priority_queue<int,greater<int>,pairing_heap_tag>
+};
+using namespace Xiaohuba_Pbds;
+#endif
+/* ---Pbds Operations End--- */
+
+int n;
+struct Line
+{
+	int x1,x2,y;
+	int val;
+	bool operator< (const Line & rhs) const
+	{
+		return y<rhs.y || y==rhs.y && val<rhs.val;
+	}
+}a[300001];
+int b[300001];
+int cnt=0;
+
+struct Node
+{
+	int cnt,l,r;
+	ll val;
+}tr[300001<<2];
+
+void build(int p, int l, int r)
+{
+	tr[p].l=l,tr[p].r=r;
+	if(l==r) return;
+	int mid=(l+r)>>1;
+	build(p<<1,l,mid);
+	build((p<<1)+1,mid+1,r);
+}
+
+void push_up(int p)
+{
+	if(tr[p].cnt)
+		tr[p].val=b[tr[p].r+1]-b[tr[p].l];
+	else
+		tr[p].val=tr[p<<1].val+tr[(p<<1)+1].val;
+}
+
+void add(int p, int L, int R, int k)
+{
+	int l=tr[p].l,r=tr[p].r;
+	if(b[l]>=R || b[r+1]<=L) return;
+	//cout<<l<<' '<<r<<endl;
+	if(L<=b[l] && R>=b[r+1])
+	{
+		tr[p].cnt+=k;
+		push_up(p);
+		return;
+	}
+	add(p<<1,L,R,k);
+	add((p<<1)+1,L,R,k);
+	push_up(p);
+}
+
+signed main()
+{
+	read(n);
+	For(i,1,n)
+	{
+		int _a,_b,_c,_d;
+		read(_a,_b,_c,_d);
+		a[++cnt]=(Line){_a,_c,_b,1};
+		b[cnt]=_a;
+		a[++cnt]=(Line){_a,_c,_d,-1};
+		b[cnt]=_c;
+	}
+	sort(a+1,a+1+cnt);
+	sort(b+1,b+1+cnt);
+	int tot=unique(b+1,b+1+cnt)-(b+1);
+	//cout<<tot<<endl;
+	build(1,1,tot-1);
+	ll ans=0;
+	For(i,1,cnt-1)
+	{
+		add(1,a[i].x1,a[i].x2,a[i].val);
+		ans+=tr[1].val*(a[i+1].y-a[i].y);
+		//cout<<tr[1].val<<' '<<a[i+1].y-a[i].y<<endl;
+	}
+	write(ans);
+	return 0;
+}
+```
