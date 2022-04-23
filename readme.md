@@ -1,5 +1,5 @@
 # oi-docs
-An document of oi in Chinese.
+A document of oi in Chinese.
 
 website: <oi-docs.vercel.app>
 ---
